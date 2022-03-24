@@ -393,6 +393,7 @@ contract ListingFacet is Modifiers {
         uint64 _expiry
     ) {
         PairInfo storage pairInfo = LibGetters._getPairInfo(_bidArgs._metaNftId);
+        require(pairInfo.baseToken != s.pil, "PIL trading is temporary disabled"); // TODO: Remove after PIL migration
         require(msg.sender != IPilgrimMetaNFT(s.metaNFT).ownerOf(pairInfo.metaNftId));
 
         mapping(address => BidInfo) storage bidInfo = _bidArgs._isNft ? pairInfo.nftInfo : pairInfo.metaNftInfo;

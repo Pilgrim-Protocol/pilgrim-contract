@@ -14,7 +14,7 @@ import {
   ManagingFacet,
   ERC20Mock,
   ERC721Mock,
-  PilgrimMetaNFT,
+  PilgrimMetaNFT, PilgrimToken,
 } from '../../../typechain';
 import {
   afterRoundFee,
@@ -58,6 +58,7 @@ describe('bidNFT', function () {
 
   let core: Diamond;
   let pilgrimMetaNFT: PilgrimMetaNFT;
+  let pilgrim: PilgrimToken;
 
   let aMMFacet: AMMFacet;
   let listingFacet: ListingFacet;
@@ -66,7 +67,7 @@ describe('bidNFT', function () {
 
   this.beforeEach(async function () {
     // @ts-ignore
-    ({ core, pilgrimMetaNFT, testERC20 } = await deployAll());
+    ({ core, pilgrimMetaNFT, testERC20, pilgrim } = await deployAll());
 
     aMMFacet = await ethers.getContractAt('AMMFacet', core.address);
     listingFacet = await ethers.getContractAt('ListingFacet', core.address);
@@ -95,6 +96,31 @@ describe('bidNFT', function () {
     await testERC20.connect(admin).transfer(user4Addr, oneEther.mul(100_000));
     await testERC20.connect(admin).transfer(user5Addr, oneEther.mul(100_000));
     await managingFacet.createPool(testERC20.address, 1, 0);
+  });
+
+  it('CORE_TEMP_03', async function (): Promise<void> {
+    await managingFacet.createPool(pilgrim.address, 1, 0);
+
+    const listReulst = await runRWMethod({
+      method: listingFacet.connect(user1).list(
+        testERC721.address,
+        tokenId,
+        listingPrice,
+        pilgrim.address,
+        emptyTagArr,
+        dummyIpfsHash,
+      ),
+      name: 'List',
+    });
+
+    const metaNftId: BigNumberish = listReulst._metaNftId;
+
+    const method = listingFacet.connect(user2).bidNft(
+      metaNftId,
+      beforeNftFee(g0NFT),
+      deadline,
+    );
+    await expect(method).to.be.revertedWith('PIL trading is temporary disabled');
   });
 
   // Bid when just listed

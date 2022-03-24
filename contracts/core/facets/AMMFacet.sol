@@ -275,6 +275,7 @@ contract AMMFacet is Modifiers {
         uint128 _roundFee
     ) private {
         address baseToken = LibGetters._getPairInfo(_metaNftId).baseToken;
+        require(baseToken != s.pil, "PIL trading is temporary disabled"); // TODO: Remove after PIL migration
         uint256 beforeBalance = IERC20(baseToken).balanceOf(address(this));
 
         /// Transfer base tokens from the caller.

@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import {
   BigNumber,
   BigNumberish,
@@ -14,7 +15,7 @@ import {
   ManagingFacet,
   ERC20Mock,
   ERC721Mock,
-  PilgrimMetaNFT,
+  PilgrimMetaNFT, PilgrimToken,
 } from '../../../typechain';
 import {
   afterRoundFee,
@@ -30,6 +31,7 @@ import {
   tenPercent,
   zeroEther,
 } from '../../testUtils';
+
 
 describe('buyRoundsWithExactBases', function () {
   let admin: Signer;
@@ -51,6 +53,7 @@ describe('buyRoundsWithExactBases', function () {
 
   let core: Diamond;
   let pilgrimMetaNFT: PilgrimMetaNFT;
+  let pilgrim: PilgrimToken;
 
   let aMMFacet: AMMFacet;
   let listingFacet: ListingFacet;
@@ -59,7 +62,7 @@ describe('buyRoundsWithExactBases', function () {
 
   this.beforeEach(async function () {
     // @ts-ignore
-    ({ core, pilgrimMetaNFT, testERC20 } = await deployAll());
+    ({ core, pilgrimMetaNFT, testERC20, pilgrim } = await deployAll());
 
     aMMFacet = await ethers.getContractAt('AMMFacet', core.address);
     listingFacet = await ethers.getContractAt('ListingFacet', core.address);
@@ -88,6 +91,30 @@ describe('buyRoundsWithExactBases', function () {
     await testERC20.connect(admin).transfer(user4Addr, oneEther.mul(100_000));
     await testERC20.connect(admin).transfer(user5Addr, oneEther.mul(100_000));
     await managingFacet.createPool(testERC20.address, 1, 0);
+  });
+
+  it('CORE_TEMP_02', async function (): Promise<void> {
+    await managingFacet.createPool(pilgrim.address, 1, 0);
+
+    const tags: string[] = [];
+    const listResult = await runRWMethod({
+      method: listingFacet
+        .connect(user1)
+        .list(testERC721.address, tokenId, listingPrice, pilgrim.address, tags, dummyIpfsHash),
+      name: 'List',
+    });
+
+    const metaNftId: BigNumberish = listResult._metaNftId;
+    const expectedRoundOut: BigNumber = oneEther.mul(9); // TODO
+    const desiredBaseIn: BigNumber = oneEther.mul(10);
+
+    const method = aMMFacet.connect(user1).buyRoundsWithExactBases(
+      metaNftId,
+      desiredBaseIn,
+      expectedRoundOut,
+      deadline,
+    );
+    await expect(method).to.be.revertedWith('PIL trading is temporary disabled');
   });
 
   // Buy when just listed
