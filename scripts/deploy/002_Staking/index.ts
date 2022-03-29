@@ -31,7 +31,7 @@ export const deploy002Staking = async (
 
   logStart('Staking Facets');
   await deployFacets(diamond, [
-    { path: 'PilgrimMakerFacet', args: [factory.address, pilgrim.address, router.address] },
+    { path: 'PilgrimMakerFacet', args: [factory.address, router.address] },
     { path: 'PilgrimTempleFacet' },
   ]);
   logDone('Staking Facets');

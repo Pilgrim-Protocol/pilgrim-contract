@@ -25,8 +25,6 @@ contract PilgrimMakerFacet is Modifiers {
     IUniswapV3Factory public immutable factory;
     ISwapRouter public immutable swapRouter;
 
-    address private immutable pil;
-
     event LogBridgeSet(address indexed from, address indexed to, uint24 fee);
 
     event LogConvert(
@@ -39,11 +37,9 @@ contract PilgrimMakerFacet is Modifiers {
 
     constructor(
         address _factory,
-        address _pil,
         ISwapRouter _swapRouter
     ) {
         factory = IUniswapV3Factory(_factory);
-        pil = _pil;
         swapRouter = _swapRouter;
     }
 
@@ -58,7 +54,7 @@ contract PilgrimMakerFacet is Modifiers {
         LibDiamond.enforceIsContractOwner();
 
         // Checks
-        require(from != pil && from != to, "PilgrimMaker: Invalid bridge");
+        require(from != address(s.pilgrim) && from != to, "PilgrimMaker: Invalid bridge");
 
         // Validate pool
         IUniswapV3Pool pool = IUniswapV3Pool(factory.getPool(from, to, fee));
@@ -70,7 +66,7 @@ contract PilgrimMakerFacet is Modifiers {
 
         // Check no cycle
         Bridge storage bridge = s.bridges[from];
-        while (bridge.to != pil) {
+        while (bridge.to != address(s.pilgrim)) {
             bridge = s.bridges[bridge.to];
             // Bridges must end up with PIL
             require(bridge.to != address(0), "PilgrimMaker: Invalid bridge, no route to PIL found");
@@ -100,7 +96,7 @@ contract PilgrimMakerFacet is Modifiers {
         }
 
         amountOut = amountIn;
-        while (bridge.to != pil) {
+        while (bridge.to != address(s.pilgrim)) {
             amountOut = _swap(bridge, amountOut, address(this));
             bridge = s.bridges[bridge.to];
             // TODO: Route existence is already ensured in setBridge. Do we need this validation?
