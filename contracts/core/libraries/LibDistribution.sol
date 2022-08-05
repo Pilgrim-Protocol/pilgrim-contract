@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: LGPL-3.0
 pragma solidity ^0.8.9;
 
 import "@uniswap/v3-core/contracts/libraries/FixedPoint96.sol";

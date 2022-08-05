@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: LGPL-3.0
 // Note: The majority part of this code has been derived from the Sushiswap SushiBar code (MIT).
 pragma solidity ^0.8.9;
 
